@@ -1,0 +1,17 @@
+Cmd_load agda-go
+
+Cmd_abort agda2-abort
+
+Cmd_infer(_toplevel)? agda2-infer-type-maybe-toplevel
+  with 0 C-u (Simplified), but there's also 1 (Instantiated), 2 (Normalised), 3 (HeadNormal) C-u
+
+Cmd_give agda2-give
+  with 0 C-u (WithoutForce), but there's also 1 C-u (WithForce)
+
+Cmd_refine_or_intro agda2-refine
+  with False; can also pass True to construct a pattern-matching lambda instead of a normal lambda (?)
+
+Cmd_goal_type_context agda2-goal-and-context
+  with same Simplified/... stuff
+
+

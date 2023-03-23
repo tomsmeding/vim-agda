@@ -194,7 +194,7 @@ endfunction
 " ### Context
 
 " Display context for hole at cursor.
-function agda#context()
+function agda#context(normmode = 2)
   if s:status() < 0
     return
   endif
@@ -206,7 +206,7 @@ function agda#context()
 
   let l:command =
     \ [ 'Cmd_goal_type_context'
-    \ , 'Simplified'
+    \ , s:normalisation_mode(a:normmode)
     \ , l:id
     \ , 'noRange'
     \ , s:quote('')
@@ -331,6 +331,7 @@ function s:handle_line(line)
   " Handle context.
   elseif l:json.kind ==# 'DisplayInfo'
     \ && l:json.info.kind ==# 'GoalSpecific'
+    " echom string(l:json)
     call s:handle_context(l:json.info.goalInfo)
 
   " Handle inferred type.
@@ -981,6 +982,21 @@ function s:status(...)
   elseif l:mode == 0 && s:agda_loading > 0
     echom 'Loading Agda (command ignored).'
     return -1
+  endif
+endfunction
+
+function s:normalisation_mode(normmode)
+  if a:normmode == 0
+    return 'Instantiated'
+  elseif a:normmode == 1
+    return 'HeadNormal'
+  elseif a:normmode == 2
+    return 'Simplified'
+  elseif a:normmode == 3
+    return 'Normalised'
+  else
+    echom 'normalisation_mode: invalid normmode ' . string(a:normmode)
+    return 'Simplified'
   endif
 endfunction
 
