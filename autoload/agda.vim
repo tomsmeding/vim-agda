@@ -193,8 +193,10 @@ endfunction
 
 " ### Context
 
+let s:context_last_normmode = 2
+
 " Display context for hole at cursor.
-function agda#context(normmode = 2)
+function agda#context(normmode = v:null)
   if s:status() < 0
     return
   endif
@@ -204,15 +206,23 @@ function agda#context(normmode = 2)
     return
   endif
 
+  if a:normmode == v:null
+    let l:normmode = s:context_last_normmode
+  else
+    let l:normmode = a:normmode
+  endif
+
   let l:command =
     \ [ 'Cmd_goal_type_context'
-    \ , s:normalisation_mode(a:normmode)
+    \ , s:normalisation_mode(l:normmode)
     \ , l:id
     \ , 'noRange'
     \ , s:quote('')
     \ ]
   
   call s:send(l:command)
+
+  let s:context_last_normmode = l:normmode
 endfunction
 
 " ### Unused
