@@ -312,6 +312,8 @@ function s:handle_line(line)
   " Reset data if decoding JSON succeeds.
   let s:data = ''
 
+  call s:debug_log("< " . string(l:json))
+
   " Handle goals.
   if l:json.kind ==# 'DisplayInfo'
     \ && l:json.info.kind ==# 'AllGoalsWarnings'
@@ -331,7 +333,6 @@ function s:handle_line(line)
   " Handle context.
   elseif l:json.kind ==# 'DisplayInfo'
     \ && l:json.info.kind ==# 'GoalSpecific'
-    " echom string(l:json)
     call s:handle_context(l:json.info.goalInfo)
 
   " Handle inferred type.
@@ -947,6 +948,8 @@ function s:send(command, ...)
     call s:handle_loading(1)
   endif
 
+  call s:debug_log(">>> SEND: " . string(a:command))
+
   let l:command =
     \ [ 'IOTCM'
     \ , s:quote(s:code_file)
@@ -954,6 +957,8 @@ function s:send(command, ...)
     \ , (l:indirect ? 'Indirect' : 'Direct')
     \ , s:parens(join(a:command))
     \ ]
+
+  call s:debug_log("# write: " . join(l:command))
 
   call chansend(g:agda_job, join(l:command) . "\n")
 endfunction
@@ -1000,3 +1005,6 @@ function s:normalisation_mode(normmode)
   endif
 endfunction
 
+function s:debug_log(msg)
+  " call writefile([strftime("%Y-%m-%d-%H-%M-%S ") . a:msg], "/home/tom/vim-agda-debug.log", "a")
+endfunction
