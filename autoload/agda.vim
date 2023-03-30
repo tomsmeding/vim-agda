@@ -201,8 +201,8 @@ function agda#context(normmode = v:null)
     return
   endif
 
-  let l:id = s:lookup(1)
-  if l:id < 0
+  let l:point = s:lookup_full(1)
+  if l:point.id < 0
     return
   endif
 
@@ -212,12 +212,36 @@ function agda#context(normmode = v:null)
     let l:normmode = a:normmode
   endif
 
+  " Set to non-empty if an expression is given in a {! long hole !}
+  let l:given_expression = ''
+
+  " If this is a long hole (longer than a single character), presumably in
+  " {! !} form
+  if l:point.start[0] < l:point.end[0]
+    \ || (l:point.start[0] == l:point.end[0] && l:point.end[1] - l:point.start[1] > 1)
+    " Get hole text including markers, and check that this is indeed a long
+    " hole with potential contents
+    let l:holetext = s:read_range(s:code_window, l:point.start, l:point.end)
+    call s:debug_log("holetext = " . l:holetext)
+    if strcharpart(l:holetext, 0, 2) == "{!"
+      \ && strcharpart(l:holetext, strchars(l:holetext) - 2, 2) == "!}"
+      " Trim markers off
+      let l:holetext = strcharpart(l:holetext, 2, strchars(l:holetext) - 4)
+      " If there is actual hole content, set it as given expression
+      if l:holetext !~ "^[ \t\r\n]*$"
+        let l:given_expression = l:holetext
+      endif
+    endif
+  endif
+
   let l:command =
-    \ [ 'Cmd_goal_type_context'
+    \ [ l:given_expression == ''
+    \     ? 'Cmd_goal_type_context'
+    \     : 'Cmd_goal_type_context_infer'
     \ , s:normalisation_mode(l:normmode)
-    \ , l:id
+    \ , l:point.id
     \ , 'noRange'
-    \ , s:quote('')
+    \ , s:quote(l:given_expression)
     \ ]
   
   call s:send(l:command)
@@ -588,6 +612,10 @@ function s:handle_context(info)
 
   call s:append_output(l:outputs, 'Goal',
     \ s:signature('Goal', a:info.type), 1)
+  if a:info.typeAux.kind == 'GoalAndHave'
+    call s:append_output(l:outputs, 'Given',
+    \ s:signature('Given', a:info.typeAux.expr), 1)
+  endif
   call s:append_output(l:outputs, 'Context',
     \ s:handle_entries(a:info.entries), 1)
   call s:handle_outputs(l:outputs)
@@ -851,25 +879,34 @@ function s:input(prompt, ...)
   return escape(l:input, '\"')
 endfunction
 
-" Get id of interaction point at cursor, or return -1 on failure.
+" Get full interaction point object at cursor, or return v:null on failure.
 " The optional argument indicates whether to print an error message on failure.
-function s:lookup(...)
-  let l:print = get(a:, 1)
-
+function s:lookup_full(print = 0)
   let l:line = line('.')
   let l:col = col('.')
   for l:point in s:points
     if s:compare([l:line, l:col], l:point.start) >= 0
       \ && s:compare([l:line, l:col], l:point.end) <= 0
-      return l:point.id
+      return l:point
     endif
   endfor
 
-  if l:print
+  if a:print
     echom 'Cursor not on hole.'
   endif
 
-  return -1
+  return v:null
+endfunction
+
+" Get id of interaction point at cursor, or return -1 on failure.
+" The optional argument indicates whether to print an error message on failure.
+function s:lookup(print = 0)
+  let l:res = s:lookup_full(a:print)
+  if l:res is v:null
+    return -1
+  else
+    return l:res.id
+  endif
 endfunction
 
 " Go to next character; return 1 if successful, 0 if at end of file.
@@ -947,6 +984,41 @@ function s:replace(window, start, end, str)
 
   " Restore window.
   execute l:window . 'wincmd w'
+endfunction
+
+" Get the contents of the code buffer from start point to end point,
+" inclusive.
+function s:read_range(window, start, end)
+  " Save window.
+  let l:window = winnr()
+  execute a:window . 'wincmd w'
+
+  " Save cursor position.
+  let l:line = line('.')
+  let l:col = col('.')
+
+  " Save registers
+  let l:prev_z_reg = getreg('z')
+  let l:prev_0_reg = getreg('0')
+  let l:prev_unn_reg = getreg('"')
+
+  " Perform read.
+  call cursor(a:start)
+  execute 'normal! v'
+  call cursor(a:end)
+  execute 'normal! "zy'
+  let l:text = getreg('z')
+
+  " Restore registers.
+  call setreg('z', l:prev_z_reg)
+  call setreg('"', l:prev_unn_reg)
+  call setreg('0', l:prev_0_reg)
+
+  " Restore cursor position and window.
+  call cursor(l:line, l:col)
+  execute l:window . 'wincmd w'
+
+  return l:text
 endfunction
 
 " Send command, as a list of tokens, to the Agda job.
