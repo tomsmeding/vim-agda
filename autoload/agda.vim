@@ -212,27 +212,7 @@ function agda#context(normmode = v:null)
     let l:normmode = a:normmode
   endif
 
-  " Set to non-empty if an expression is given in a {! long hole !}
-  let l:given_expression = ''
-
-  " If this is a long hole (longer than a single character), presumably in
-  " {! !} form
-  if l:point.start[0] < l:point.end[0]
-    \ || (l:point.start[0] == l:point.end[0] && l:point.end[1] - l:point.start[1] > 1)
-    " Get hole text including markers, and check that this is indeed a long
-    " hole with potential contents
-    let l:holetext = s:read_range(s:code_window, l:point.start, l:point.end)
-    call s:debug_log("holetext = " . l:holetext)
-    if strcharpart(l:holetext, 0, 2) == "{!"
-      \ && strcharpart(l:holetext, strchars(l:holetext) - 2, 2) == "!}"
-      " Trim markers off
-      let l:holetext = strcharpart(l:holetext, 2, strchars(l:holetext) - 4)
-      " If there is actual hole content, set it as given expression
-      if l:holetext !~ "^[ \t\r\n]*$"
-        let l:given_expression = l:holetext
-      endif
-    endif
-  endif
+  let l:given_expression = s:get_hole_contents(s:code_window, l:point)
 
   let l:command =
     \ [ l:given_expression == ''
@@ -1019,6 +999,31 @@ function s:read_range(window, start, end)
   execute l:window . 'wincmd w'
 
   return l:text
+endfunction
+
+" Given a hole point, return the text inside of the {! !} markers, if any. If
+" the hole is a simple ? hole, the empty string is returned.
+function s:get_hole_contents(window, point)
+  if a:point.start[0] < a:point.end[0]
+    \ || (a:point.start[0] == a:point.end[0] && a:point.end[1] - a:point.start[1] > 1)
+    " Get hole text including markers, and check that this is indeed a long
+    " hole with potential contents
+    let l:holetext = s:read_range(a:window, a:point.start, a:point.end)
+
+    if strcharpart(l:holetext, 0, 2) == "{!"
+      \ && strcharpart(l:holetext, strchars(l:holetext) - 2, 2) == "!}"
+      " Trim markers off
+      let l:holetext = strcharpart(l:holetext, 2, strchars(l:holetext) - 4)
+
+      " If there is actual hole content, return it
+      if l:holetext !~ "^[ \t\r\n]*$"
+        return l:holetext
+      endif
+    endif
+  endif
+
+  " Apparently no content, return empty string
+  return ""
 endfunction
 
 " Send command, as a list of tokens, to the Agda job.
