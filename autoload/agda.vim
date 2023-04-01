@@ -100,23 +100,34 @@ endfunction
 
 " ### Infer
 
-function agda#infer()
+" The optional parameter, when set to 1, makes the function always ask for an
+" expression to be inferred, even if there is an expression given in the hole.
+function agda#infer(always_ask = 0)
   if s:status() < 0
     return
   endif
 
-  let l:id = s:lookup()
+  let l:point = s:lookup_full()
 
-  let l:input = s:input('Infer', 1)
-  if l:input ==# '.'
-    return
+  " Get hole contents as input if possible
+  let l:input = ''
+  if l:point.id >= 0 && a:always_ask == 0
+    let l:input = s:get_hole_contents(s:code_window, l:point)
   endif
 
-  if l:id >= 0
+  " If we still need to, ask for input
+  if l:input == ''
+    let l:input = s:input('Infer', 1)
+    if l:input ==# '.'
+      return
+    endif
+  endif
+
+  if l:point.id >= 0
     let l:command =
       \ [ 'Cmd_infer'
       \ , 'Simplified'
-      \ , l:id
+      \ , l:point.id
       \ , 'noRange'
       \ , s:quote(l:input)
       \ ]
