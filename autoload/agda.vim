@@ -671,7 +671,11 @@ function s:handle_output(name, content, ...)
   if l:agda >= 0
     execute l:agda . 'wincmd w'
   else
-    belowright 10split Agda
+    if g:vimAgdaSplitVertical == 1
+      belowright vsplit Agda
+    else
+      belowright 10split Agda
+    endif
     let &l:buftype = 'nofile'
     let &l:swapfile = 0
   endif

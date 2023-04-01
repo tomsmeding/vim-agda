@@ -71,6 +71,7 @@ let g:agda_args = ['--local-interfaces']
 | `g:agda_args` | `[]` | Arguments for `agda` executable. |
 | `g:agda_unused_args` | `[]` | Arguments for `agda-unused` executable. |
 | `g:agda_debug` | `0` | Log interaction output to the messages buffer. |
+| `g:agda_split_vertical` | `0` | Split the Agda window vertically on the right. |
 
 ## vim-foldout
 

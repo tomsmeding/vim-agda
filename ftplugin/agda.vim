@@ -26,6 +26,12 @@ if !exists('g:agda_debug')
   let g:agda_debug = 0
 endif
 
+" Whether to split the Agda window vertically on the right, instead of
+" horizontally below your buffer.
+if !exists('g:agda_split_vertical')
+  let g:agda_split_vertical = 0
+endif
+
 " ## Comments
 
 let &l:comments = 's1fl:{-,mb:-,ex:-},:--'
