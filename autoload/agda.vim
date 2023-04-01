@@ -111,7 +111,7 @@ function agda#infer(always_ask = 0)
 
   " Get hole contents as input if possible
   let l:input = ''
-  if l:point.id >= 0 && a:always_ask == 0
+  if l:point isnot v:null && a:always_ask == 0
     let l:input = s:get_hole_contents(s:code_window, l:point)
   endif
 
@@ -123,7 +123,7 @@ function agda#infer(always_ask = 0)
     endif
   endif
 
-  if l:point.id >= 0
+  if l:point isnot v:null
     let l:command =
       \ [ 'Cmd_infer'
       \ , 'Simplified'
@@ -213,11 +213,11 @@ function agda#context(normmode = v:null)
   endif
 
   let l:point = s:lookup_full(1)
-  if l:point.id < 0
+  if l:point is v:null
     return
   endif
 
-  if a:normmode == v:null
+  if a:normmode is v:null
     let l:normmode = s:context_last_normmode
   else
     let l:normmode = a:normmode
