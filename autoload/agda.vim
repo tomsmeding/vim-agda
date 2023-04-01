@@ -593,7 +593,14 @@ endfunction
 " ### Infer
 
 function s:handle_infer(result)
-  call s:handle_clear('Inferred type: ' . a:result)
+  if g:vimAgdaAlwaysInWindow == 1
+    let l:outputs = []
+    call s:append_output(l:outputs, 'Inferred type',
+      \ s:signature('Given expression', a:result), 1)
+    call s:handle_outputs(l:outputs)
+  else
+    call s:handle_clear('Inferred type: ' . a:result)
+  endif
 endfunction
 
 " ### Context

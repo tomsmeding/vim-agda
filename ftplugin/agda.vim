@@ -26,6 +26,11 @@ if !exists('g:agda_debug')
   let g:agda_debug = 0
 endif
 
+" Whether to put even Infer output in the Agda window instead of as a message.
+if !exists('g:agda_always_in_window')
+  let g:agda_always_in_window = 0
+endif
+
 " Whether to split the Agda window vertically on the right, instead of
 " horizontally below your buffer.
 if !exists('g:agda_split_vertical')
