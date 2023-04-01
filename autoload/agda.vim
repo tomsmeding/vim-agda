@@ -144,6 +144,52 @@ function agda#infer(always_ask = 0)
   call s:send(l:command)
 endfunction
 
+" ### Normalise
+
+" The optional parameter, when set to 1, makes the function always ask for an
+" expression to be inferred, even if there is an expression given in the hole.
+function agda#normalise(always_ask = 0)
+  if s:status() < 0
+    return
+  endif
+
+  let l:point = s:lookup_full()
+
+  " Get hole contents as input if possible
+  let l:input = ''
+  if l:point isnot v:null && a:always_ask == 0
+    let l:input = s:get_hole_contents(s:code_window, l:point)
+  endif
+
+  " If we still need to, ask for input
+  if l:input == ''
+    let l:input = s:input('Normalise', 1)
+    if l:input ==# '.'
+      return
+    endif
+  endif
+
+  if l:point isnot v:null
+    let l:command =
+      \ [ 'Cmd_compute'
+      \ , 'DefaultCompute'
+      \ , l:point.id
+      \ , 'noRange'
+      \ , s:quote(l:input)
+      \ ]
+
+  else
+    let l:command =
+      \ [ 'Cmd_compute_toplevel'
+      \ , 'DefaultCompute'
+      \ , s:quote(l:input)
+      \ ]
+
+  endif
+
+  call s:send(l:command)
+endfunction
+
 " ### Give
 
 " Give expression for hole at cursor.
@@ -358,12 +404,24 @@ function s:handle_line(line)
   " Handle context.
   elseif l:json.kind ==# 'DisplayInfo'
     \ && l:json.info.kind ==# 'GoalSpecific'
+    \ && l:json.info.goalInfo.kind ==# 'GoalType'
     call s:handle_context(l:json.info.goalInfo)
+
+  " Handle normalised expression in goal.
+  elseif l:json.kind ==# 'DisplayInfo'
+    \ && l:json.info.kind ==# 'GoalSpecific'
+    \ && l:json.info.goalInfo.kind ==# 'NormalForm'
+    call s:handle_normalised(l:json.info.goalInfo.expr)
 
   " Handle inferred type.
   elseif l:json.kind ==# 'DisplayInfo'
     \ && l:json.info.kind ==# 'InferredType'
     call s:handle_infer(l:json.info.expr)
+
+  " Handle normalised expression at top level.
+  elseif l:json.kind ==# 'DisplayInfo'
+    \ && l:json.info.kind ==# 'NormalForm'
+    call s:handle_normalised(l:json.info.expr)
 
   " Handle introduction not found error.
   elseif l:json.kind ==# 'DisplayInfo'
@@ -603,6 +661,19 @@ function s:handle_infer(result)
   endif
 endfunction
 
+" ### Normalise
+
+function s:handle_normalised(result)
+  if g:vimAgdaAlwaysInWindow == 1
+    let l:outputs = []
+    call s:append_output(l:outputs, 'Normalised',
+      \ s:expression('Given expression', a:result), 1)
+    call s:handle_outputs(l:outputs)
+  else
+    call s:handle_clear('Normalised: ' . a:result)
+  endif
+endfunction
+
 " ### Context
 
 function s:handle_context(info)
@@ -800,6 +871,15 @@ function s:signature(name, type)
     \ . "\n"
     \ . '  : '
     \ . join(split(a:type, "\n"), "\n    ")
+    \ . "\n"
+endfunction
+
+" Format an expression.
+function s:expression(name, expr)
+  return a:name
+    \ . "\n"
+    \ . '  = '
+    \ . join(split(a:expr, "\n"), "\n    ")
     \ . "\n"
 endfunction
 
