@@ -441,6 +441,12 @@ function s:handle_line(line)
     call s:handle_loading(0)
     echom 'No introduction forms found.'
 
+  " Handle constructor unknown error (from refine).
+  elseif l:json.kind ==# 'DisplayInfo'
+    \ && l:json.info.kind ==# 'IntroConstructorUnknown'
+    call s:handle_loading(0)
+    echom 'Unknown constructor: ' . join(l:json.info.constructors)
+
   " Handle abort.
   elseif l:json.kind ==# 'DoneAborting'
     call s:handle_loading(0)
