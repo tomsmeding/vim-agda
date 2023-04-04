@@ -1159,9 +1159,10 @@ function s:send(command, ...)
     \ , s:parens(join(a:command))
     \ ]
 
-  call s:debug_log("# write: " . join(l:command))
+  let l:to_send = substitute(join(l:command), '\n', '\\n', 'g')
+  call s:debug_log("# write: " . l:to_send)
 
-  call chansend(g:agda_job, join(l:command) . "\n")
+  call chansend(g:agda_job, [l:to_send, ''])
 endfunction
 
 " Check whether Agda is loaded on the current file.
