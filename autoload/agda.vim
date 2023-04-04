@@ -42,6 +42,18 @@ function agda#load()
   call s:send(l:command)
 endfunction
 
+" ### Kill Agda
+
+" Kill the Agda process in case something went wrong.
+function agda#kill()
+  if exists('g:agda_job') && g:agda_job >= 0
+    call jobstop(g:agda_job)
+    let g:agda_job = -1
+  endif
+  let g:agda_loading = 0
+  call s:handle_clear("Killed Agda.")
+endfunction
+
 " ### Abort
 
 " Abort the current Agda process operation.
