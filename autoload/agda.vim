@@ -669,7 +669,7 @@ endfunction
 " ### Infer
 
 function s:handle_infer(result)
-  if g:vimAgdaAlwaysInWindow == 1
+  if g:agda_always_in_window == 1
     let l:outputs = []
     call s:append_output(l:outputs, 'Inferred type',
       \ s:signature('Given expression', a:result), 1)
@@ -682,7 +682,7 @@ endfunction
 " ### Normalise
 
 function s:handle_normalised(result)
-  if g:vimAgdaAlwaysInWindow == 1
+  if g:agda_always_in_window == 1
     let l:outputs = []
     call s:append_output(l:outputs, 'Normalised',
       \ s:expression('Given expression', a:result), 1)
@@ -767,7 +767,7 @@ function s:handle_output(name, content, ...)
   if l:agda >= 0
     execute l:agda . 'wincmd w'
   else
-    if g:vimAgdaSplitVertical == 1
+    if g:agda_split_vertical == 1
       belowright vsplit Agda
     else
       belowright 10split Agda
