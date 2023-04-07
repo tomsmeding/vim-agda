@@ -51,7 +51,7 @@ function agda#kill()
     let g:agda_job = -1
   endif
   let g:agda_loading = 0
-  call s:handle_clear("Killed Agda.")
+  call s:handle_clear('Killed Agda.')
 endfunction
 
 " ### Abort
@@ -325,10 +325,10 @@ endfunction
 " Toggle value of `agda_debug`.
 function agda#toggle_debug()
   if g:agda_debug
-    echom "Agda debugging off."
+    echom 'Agda debugging off.'
     let g:agda_debug = 0
   else
-    echom "Agda debugging on."
+    echom 'Agda debugging on.'
     let g:agda_debug = 1
   endif
 endfunction
@@ -395,7 +395,7 @@ function s:handle_line(line)
   " Reset data if decoding JSON succeeds.
   let s:data = ''
 
-  call s:debug_log("< " . string(l:json))
+  call s:debug_log('< ' . string(l:json))
 
   " Handle goals.
   if l:json.kind ==# 'DisplayInfo'
@@ -1130,8 +1130,8 @@ function s:get_hole_contents(window, point)
     " hole with potential contents
     let l:holetext = s:read_range(a:window, a:point.start, a:point.end)
 
-    if strcharpart(l:holetext, 0, 2) == "{!"
-      \ && strcharpart(l:holetext, strchars(l:holetext) - 2, 2) == "!}"
+    if strcharpart(l:holetext, 0, 2) == '{!'
+      \ && strcharpart(l:holetext, strchars(l:holetext) - 2, 2) == '!}'
       " Trim markers off
       let l:holetext = strcharpart(l:holetext, 2, strchars(l:holetext) - 4)
 
@@ -1143,7 +1143,7 @@ function s:get_hole_contents(window, point)
   endif
 
   " Apparently no content, return empty string
-  return ""
+  return ''
 endfunction
 
 " Send command, as a list of tokens, to the Agda job.
@@ -1155,7 +1155,7 @@ function s:send(command, ...)
     call s:handle_loading(1)
   endif
 
-  call s:debug_log(">>> SEND: " . string(a:command))
+  call s:debug_log('>>> SEND: ' . string(a:command))
 
   let l:command =
     \ [ 'IOTCM'
@@ -1166,7 +1166,7 @@ function s:send(command, ...)
     \ ]
 
   let l:to_send = substitute(join(l:command), '\n', '\\n', 'g')
-  call s:debug_log("# write: " . l:to_send)
+  call s:debug_log('# write: ' . l:to_send)
 
   call chansend(g:agda_job, [l:to_send, ''])
 endfunction
@@ -1214,5 +1214,5 @@ function s:normalisation_mode(normmode)
 endfunction
 
 function s:debug_log(msg)
-  " call writefile([strftime("%Y-%m-%d-%H-%M-%S ") . a:msg], "/home/tom/vim-agda-debug.log", "a")
+  " call writefile([strftime('%Y-%m-%d-%H-%M-%S ') . a:msg], '/home/tom/vim-agda-debug.log', 'a')
 endfunction
