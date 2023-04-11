@@ -961,7 +961,7 @@ endfunction
 " Get input from the user.
 " The `prompt` string should not include a trailing colon or space.
 " The optional argument indicates whether to fail on all-whitespace input.
-" Return an escaped string, or '.' on failure.
+" Return the entered string, or '.' on failure.
 function s:input(prompt, ...)
   let l:strict = get(a:, 1)
 
@@ -976,7 +976,7 @@ function s:input(prompt, ...)
     return '.'
   endif
 
-  return escape(l:input, '\"')
+  return l:input
 endfunction
 
 " Get full interaction point object at cursor, or return v:null on failure.
@@ -1030,9 +1030,9 @@ function s:parens(str)
   return '(' . a:str . ')'
 endfunction
 
-" Wrap a string in double quotes.
+" Wrap a string in double quotes and perform JSON string escapes.
 function s:quote(str)
-  return '"' . a:str . '"'
+  return '"' . escape(a:str, '\"') . '"'
 endfunction
 
 " Replace text at the given location, preserving cursor position.
